@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerar Boleto</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .result.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .barcode-section {
+            margin-bottom: 20px;
+        }
+
+        .barcode-section h3 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        .barcode-text {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
+            color: #333;
+            text-align: center;
+        }
+
+        .barcode-image {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .barcode-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .alert {
+            padding: 14px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-error {
+            background-color: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+
+        .alert-success {
+            background-color: #efe;
+            color: #3c3;
+            border: 1px solid #cfc;
+        }
+
+        .success-message {
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .success-message.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        .validation-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .validation-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .barcode-text.valid {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            color: #2e7d32;
+        }
+
+        .barcode-text.invalid {
+            background: #ffebee;
+            border: 2px solid #f44336;
+            color: #c62828;
+        }
+
+        .validation-status {
+            display: none;
+            margin-top: 10px;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+            animation: slideIn 0.3s ease;
+        }
+
+        .validation-status.valid {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #4caf50;
+            display: block;
+        }
+
+        .validation-status.invalid {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #f44336;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💳 Gerar Boleto</h1>
+            <p>Preencha os dados para gerar seu código de barras</p>
+        </div>
+
+        <form id="boletoForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="dataVencimento">Data de Vencimento</label>
+                    <input type="date" id="dataVencimento" name="dataVencimento" required>
+                </div>
+                <div class="form-group">
+                    <label for="valor">Valor (R$)</label>
+                    <input type="number" id="valor" name="valor" step="0.01" min="0" placeholder="0.00" required>
+                </div>
+            </div>
+
+            <button type="submit">Gerar Código de Barras</button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 10px; color: #666;">Gerando boleto...</p>
+        </div>
+
+        <div class="success-message" id="successMessage">
+            <div class="alert alert-success">
+                ✓ Boleto gerado com sucesso!
+            </div>
+        </div>
+
+        <div class="result" id="result">
+            <div class="barcode-section">
+                <h3>📝 Código de Barras</h3>
+                <div class="barcode-text" id="barcodeText"></div>
+                <div class="validation-status" id="validationStatus"></div>
+            </div>
+
+            <div class="barcode-section">
+                <h3>📊 Imagem do Código</h3>
+                <div class="barcode-image">
+                    <img id="barcodeImage" alt="Código de Barras">
+                </div>
+            </div>
+
+            <button type="button" class="validation-btn" id="validateBtn" disabled>
+                ✓ Validar Código de Barras
+            </button>
+        </div>
+
+        <div id="errorMessage"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('boletoForm');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const barcodeText = document.getElementById('barcodeText');
+        const barcodeImage = document.getElementById('barcodeImage');
+        const validateBtn = document.getElementById('validateBtn');
+        const validationStatus = document.getElementById('validationStatus');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const dataVencimento = document.getElementById('dataVencimento').value;
+            const valor = parseFloat(document.getElementById('valor').value);
+
+            // Validações
+            if (!dataVencimento || !valor || valor <= 0) {
+                showError('Por favor, preencha todos os campos corretamente.');
+                return;
+            }
+
+            loading.style.display = 'block';
+            result.classList.remove('show');
+            successMessage.classList.remove('show');
+            errorMessage.innerHTML = '';
+            
+            // Reset validation status
+            barcodeText.classList.remove('valid', 'invalid');
+            validationStatus.className = 'validation-status';
+            validationStatus.textContent = '';
+            validateBtn.disabled = true;
+
+            try {
+                const response = await fetch('http://localhost:7023/api/barcode-generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        dataVencimento: dataVencimento,
+                        valor: valor
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro: ${response.status} - ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                // Verifica se tem os campos esperados
+                if (!data.barcode || !data.imagemBase64) {
+                    throw new Error('Resposta inválida da API');
+                }
+
+                // Exibe o barcode e imagem
+                barcodeText.textContent = data.barcode;
+                barcodeImage.src = `data:image/png;base64,${data.imagemBase64}`;
+
+                result.classList.add('show');
+                successMessage.classList.add('show');
+                validateBtn.disabled = false;
+
+            } catch (error) {
+                console.error('Erro:', error);
+                showError(`Erro ao gerar boleto: ${error.message}`);
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+
+        validateBtn.addEventListener('click', async () => {
+            const barcode = barcodeText.textContent;
+            if (!barcode) return;
+
+            validateBtn.disabled = true;
+            validateBtn.textContent = '⌛ Validando...';
+
+            try {
+                const response = await fetch('http://localhost:7210/api/barcode-validate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ barcode })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erro ao validar código de barras');
+                }
+
+                const resultData = await response.json();
+
+                barcodeText.classList.remove('valid', 'invalid');
+                validationStatus.classList.remove('valid', 'invalid');
+
+                if (resultData.valido === true) {
+                    barcodeText.classList.add('valid');
+                    validationStatus.classList.add('valid');
+                    validationStatus.innerHTML = `✅ ${resultData.mensagem || 'Código de barras válido!'}`;
+                } else {
+                    barcodeText.classList.add('invalid');
+                    validationStatus.classList.add('invalid');
+                    validationStatus.innerHTML = `❌ ${resultData.mensagem || 'Código de barras inválido!'}`;
+                }
+
+            } catch (error) {
+                console.error('Erro na validação:', error);
+                showError(`Erro na validação: ${error.message}`);
+            } finally {
+                validateBtn.disabled = false;
+                validateBtn.innerHTML = '✓ Validar Código de Barras';
+            }
+        });
+
+        function showError(message) {
+            errorMessage.innerHTML = `<div class="alert alert-error">⚠️ ${message}</div>`;
+            result.classList.remove('show');
+            successMessage.classList.remove('show');
+        }
+
+        // Define a data mínima como hoje
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.getElementById('dataVencimento').min = tomorrow.toISOString().split('T')[0];
+
+        // Define um valor padrão próximo para testes
+        document.getElementById('dataVencimento').valueAsDate = tomorrow;
+    </script>
+</body>
+</html>

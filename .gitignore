@@ -1,0 +1,33 @@
+# Build Artifacts
+bin/
+obj/
+[Rr]elease/
+[Dd]ebug/
+
+# Visual Studio & VS Code
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Azure Functions specific
+local.settings.json
+.python_packages/
+.env
+.env.*
+env/
+venv/
+
+# Dependencies
+node_modules/
+packages/
+
+# OS-specific
+Thumbs.db
+.DS_Store
+
+# Temporary files
+*.tmp
+*.log

@@ -13,13 +13,25 @@ O **Azure Service Bus** é utilizado como um serviço de mensagens para garantir
     *   No Portal do Azure, crie um novo recurso de **Service Bus**.
     *   Escolha um nome único para o Namespace (ex: `ns-dio-boletos`).
     *   Selecione o plano (Basic é suficiente para este laboratório).
+    
+    ![Criando Namespace](creatingnamespace.png)
+
 2.  **Criar a Fila (Queue)**:
     *   Dentro do Namespace, vá em **Queues**.
     *   Crie uma nova fila chamada `gerador-codigo-barras-queue`.
+    
+    ![Criando Fila](createqueue.png)
+
 3.  **Obter a String de Conexão**:
     *   Vá em **Shared access policies**.
     *   Clique em `RootManageSharedAccessKey` (ou crie uma nova).
     *   Copie a **Primary Connection String**. Ela será usada na configuração local da Function.
+
+4.  **Visualização do Service Bus**:
+    *   Após a criação, você terá uma visão geral do recurso e das mensagens na fila.
+    
+    ![Service Bus Overview](servicebus.png)
+    ![Fila de Mensagens](menssagequeue.png)
 
 ---
 
@@ -81,6 +93,11 @@ Para testar o fluxo completo:
     *   Verifique se as URLs `localhost:7023` e `localhost:7210` estão ativas.
 2.  **Postman (Opcional)**:
     *   Envie um POST para `/api/barcode-generate` com `{"valor": "100.00", "dataVencimento": "2024-12-31"}`.
+    *   Valide o código gerado enviando um POST para `/api/barcode-validate`.
+    
+    ![Postman Gerar Boleto](postmangeneratebarcode.png)
+    ![Postman Validar Boleto](postmanvalidatebarcode.png)
+
 3.  **Navegador**:
     *   Abra o arquivo `front/index.html`.
     *   Gere um boleto e valide-o imediatamente.
